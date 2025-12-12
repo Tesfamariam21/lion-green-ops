@@ -9,17 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export interface DispatchRecord {
-  id: string;
-  serialNumber: string;
-  model: string;
-  variant: string;
-  productionDate: string;
-  inspector: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
+import { DispatchRecord } from "@/types/dispatch";
 
 interface DispatchTableProps {
   records: DispatchRecord[];
@@ -52,8 +42,8 @@ const DispatchTable = ({
           <TableRow className="border-border hover:bg-transparent">
             <TableHead className="text-muted-foreground">Serial #</TableHead>
             <TableHead className="text-muted-foreground">Model</TableHead>
-            <TableHead className="text-muted-foreground">Variant</TableHead>
-            <TableHead className="text-muted-foreground">Production Date</TableHead>
+            <TableHead className="text-muted-foreground">Customer</TableHead>
+            <TableHead className="text-muted-foreground">Destination</TableHead>
             <TableHead className="text-muted-foreground">Inspector</TableHead>
             <TableHead className="text-muted-foreground">Status</TableHead>
             <TableHead className="text-muted-foreground text-right">Actions</TableHead>
@@ -63,20 +53,23 @@ const DispatchTable = ({
           {records.map((record) => (
             <TableRow
               key={record.id}
-              className="border-border hover:bg-secondary/30 transition-colors"
+              className="border-border hover:bg-secondary/30 transition-colors cursor-pointer"
+              onClick={() => onView(record)}
             >
               <TableCell className="font-mono text-foreground">
                 {record.serialNumber}
               </TableCell>
               <TableCell className="text-foreground">{record.model}</TableCell>
-              <TableCell className="text-foreground">{record.variant}</TableCell>
               <TableCell className="text-muted-foreground">
-                {record.productionDate}
+                {record.customerName || "-"}
               </TableCell>
-              <TableCell className="text-muted-foreground">{record.inspector}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {record.destinationCity || "-"}
+              </TableCell>
+              <TableCell className="text-muted-foreground">{record.qcInspectorName}</TableCell>
               <TableCell>{getStatusBadge(record.status)}</TableCell>
               <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" onClick={() => onView(record)}>
                     <Eye className="h-4 w-4" />
                   </Button>

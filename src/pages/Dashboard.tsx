@@ -2,69 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
-import DispatchTable, { DispatchRecord } from "@/components/dispatch/DispatchTable";
+import DispatchTable from "@/components/dispatch/DispatchTable";
+import DispatchDetailDialog from "@/components/dispatch/DispatchDetailDialog";
 import { Truck, CheckCircle, Clock, XCircle, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-
-const mockRecords: DispatchRecord[] = [
-  {
-    id: "1",
-    serialNumber: "LGS-2024-0042",
-    model: "Eco Rider",
-    variant: "Premium",
-    productionDate: "2024-01-10",
-    inspector: "John Smith",
-    status: "pending",
-    createdAt: "2024-01-11",
-  },
-  {
-    id: "2",
-    serialNumber: "LGS-2024-0041",
-    model: "Power Haul",
-    variant: "Heavy Duty",
-    productionDate: "2024-01-09",
-    inspector: "Sarah Lee",
-    status: "approved",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: "3",
-    serialNumber: "LGS-2024-0040",
-    model: "City Cruiser",
-    variant: "Standard",
-    productionDate: "2024-01-08",
-    inspector: "Mike Johnson",
-    status: "rejected",
-    createdAt: "2024-01-09",
-  },
-  {
-    id: "4",
-    serialNumber: "LGS-2024-0039",
-    model: "Cargo Max",
-    variant: "Premium",
-    productionDate: "2024-01-07",
-    inspector: "John Smith",
-    status: "approved",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: "5",
-    serialNumber: "LGS-2024-0038",
-    model: "Eco Rider",
-    variant: "Standard",
-    productionDate: "2024-01-06",
-    inspector: "Sarah Lee",
-    status: "pending",
-    createdAt: "2024-01-07",
-  },
-];
+import { DispatchRecord } from "@/types/dispatch";
+import { mockDispatchRecords } from "@/data/mockDispatchRecords";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
-  const [records, setRecords] = useState<DispatchRecord[]>(mockRecords);
+  const [records, setRecords] = useState<DispatchRecord[]>(mockDispatchRecords);
+  const [selectedRecord, setSelectedRecord] = useState<DispatchRecord | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("lgs_user");
@@ -85,9 +37,17 @@ const Dashboard = () => {
   };
 
   const handleView = (record: DispatchRecord) => {
+    setSelectedRecord(record);
+    setIsDetailOpen(true);
+  };
+
+  const handleSaveRecord = (updatedRecord: DispatchRecord) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
+    );
     toast({
-      title: "View Details",
-      description: `Viewing details for ${record.serialNumber}`,
+      title: "Record Updated",
+      description: `Dispatch ${updatedRecord.serialNumber} has been updated.`,
     });
   };
 
@@ -191,6 +151,13 @@ const Dashboard = () => {
         onApprove={handleApprove}
         onReject={handleReject}
         showActions={user.role === "Dispatch Manager" || user.role === "Admin"}
+      />
+
+      <DispatchDetailDialog
+        record={selectedRecord}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onSave={handleSaveRecord}
       />
     </DashboardLayout>
   );

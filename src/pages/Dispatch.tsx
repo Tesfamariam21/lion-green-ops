@@ -2,51 +2,23 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DispatchForm from "@/components/dispatch/DispatchForm";
-import DispatchTable, { DispatchRecord } from "@/components/dispatch/DispatchTable";
+import DispatchTable from "@/components/dispatch/DispatchTable";
+import DispatchDetailDialog from "@/components/dispatch/DispatchDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, List } from "lucide-react";
-
-const mockRecords: DispatchRecord[] = [
-  {
-    id: "1",
-    serialNumber: "LGS-2024-0042",
-    model: "Eco Rider",
-    variant: "Premium",
-    productionDate: "2024-01-10",
-    inspector: "John Smith",
-    status: "pending",
-    createdAt: "2024-01-11",
-  },
-  {
-    id: "2",
-    serialNumber: "LGS-2024-0041",
-    model: "Power Haul",
-    variant: "Heavy Duty",
-    productionDate: "2024-01-09",
-    inspector: "Sarah Lee",
-    status: "approved",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: "3",
-    serialNumber: "LGS-2024-0040",
-    model: "City Cruiser",
-    variant: "Standard",
-    productionDate: "2024-01-08",
-    inspector: "Mike Johnson",
-    status: "rejected",
-    createdAt: "2024-01-09",
-  },
-];
+import { DispatchRecord } from "@/types/dispatch";
+import { mockDispatchRecords } from "@/data/mockDispatchRecords";
 
 const Dispatch = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
-  const [records, setRecords] = useState<DispatchRecord[]>(mockRecords);
+  const [records, setRecords] = useState<DispatchRecord[]>(mockDispatchRecords);
   const [activeTab, setActiveTab] = useState("list");
+  const [selectedRecord, setSelectedRecord] = useState<DispatchRecord | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("lgs_user");
@@ -63,9 +35,17 @@ const Dispatch = () => {
   };
 
   const handleView = (record: DispatchRecord) => {
+    setSelectedRecord(record);
+    setIsDetailOpen(true);
+  };
+
+  const handleSaveRecord = (updatedRecord: DispatchRecord) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
+    );
     toast({
-      title: "Dispatch Details",
-      description: `Serial: ${record.serialNumber} | Model: ${record.model} | Status: ${record.status}`,
+      title: "Record Updated",
+      description: `Dispatch ${updatedRecord.serialNumber} has been updated.`,
     });
   };
 
@@ -124,7 +104,7 @@ const Dispatch = () => {
                 Dispatch Records
               </h3>
               <p className="text-sm text-muted-foreground">
-                {records.length} total records
+                {records.length} total records - Click a row to view details
               </p>
             </div>
             <Button variant="brand" onClick={() => setActiveTab("new")}>
@@ -153,6 +133,13 @@ const Dispatch = () => {
           <DispatchForm />
         </TabsContent>
       </Tabs>
+
+      <DispatchDetailDialog
+        record={selectedRecord}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onSave={handleSaveRecord}
+      />
     </DashboardLayout>
   );
 };

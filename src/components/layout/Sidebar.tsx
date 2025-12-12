@@ -22,7 +22,7 @@ interface SidebarProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Truck, label: "Dispatch", path: "/dispatch" },
-  { icon: Users, label: "Staff", path: "/staff" },
+  { icon: Users, label: "Staff", path: "/staff", adminOnly: true },
   { icon: Package, label: "Inventory", path: "/inventory", disabled: true },
   { icon: BarChart3, label: "Market Data", path: "/market", disabled: true },
   { icon: FileText, label: "Reports", path: "/reports", disabled: true },
@@ -87,6 +87,11 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
                 Soon
               </span>
             )}
+            {!collapsed && item.adminOnly && (
+              <span className="text-xs px-2 py-0.5 rounded bg-accent/20 text-accent">
+                Admin
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -101,6 +106,11 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
         >
           <Settings className="h-5 w-5 flex-shrink-0" />
           {!collapsed && <span>Settings</span>}
+          {!collapsed && (
+            <span className="text-xs px-2 py-0.5 rounded bg-accent/20 text-accent ml-auto">
+              Admin
+            </span>
+          )}
         </NavLink>
         <button
           onClick={onLogout}
