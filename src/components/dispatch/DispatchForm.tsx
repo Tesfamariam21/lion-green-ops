@@ -12,14 +12,22 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, Battery, CircleDot, Gauge, Lightbulb, Wrench } from "lucide-react";
+import { Truck, Battery, CircleDot, Gauge, Lightbulb, Wrench, LucideIcon } from "lucide-react";
 
-interface ChecklistItem {
+interface ChecklistItemConfig {
   id: string;
   label: string;
-  icon: React.ReactNode;
-  checked: boolean;
+  icon: LucideIcon;
 }
+
+const CHECKLIST_ITEMS: ChecklistItemConfig[] = [
+  { id: "battery", label: "Battery Condition", icon: Battery },
+  { id: "tires", label: "Tires & Wheels", icon: CircleDot },
+  { id: "brakes", label: "Brake System", icon: Gauge },
+  { id: "lights", label: "Lights & Signals", icon: Lightbulb },
+  { id: "motor", label: "Motor Function", icon: Wrench },
+  { id: "frame", label: "Frame & Body", icon: Truck },
+];
 
 const DispatchForm = () => {
   const { toast } = useToast();
@@ -28,25 +36,18 @@ const DispatchForm = () => {
   const [variant, setVariant] = useState("");
   const [productionDate, setProductionDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    { id: "battery", label: "Battery Condition", icon: <Battery className="h-4 w-4" />, checked: false },
-    { id: "tires", label: "Tires & Wheels", icon: <CircleDot className="h-4 w-4" />, checked: false },
-    { id: "brakes", label: "Brake System", icon: <Gauge className="h-4 w-4" />, checked: false },
-    { id: "lights", label: "Lights & Signals", icon: <Lightbulb className="h-4 w-4" />, checked: false },
-    { id: "motor", label: "Motor Function", icon: <Wrench className="h-4 w-4" />, checked: false },
-    { id: "frame", label: "Frame & Body", icon: <Truck className="h-4 w-4" />, checked: false },
-  ]);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
+    Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.id, false]))
+  );
 
   const handleChecklistChange = (id: string, checked: boolean) => {
-    setChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, checked } : item))
-    );
+    setCheckedItems((prev) => ({ ...prev, [id]: checked }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const allChecked = checklist.every((item) => item.checked);
+    const allChecked = CHECKLIST_ITEMS.every((item) => checkedItems[item.id]);
     if (!allChecked) {
       toast({
         title: "Incomplete Checklist",
@@ -67,7 +68,7 @@ const DispatchForm = () => {
     setVariant("");
     setProductionDate("");
     setNotes("");
-    setChecklist((prev) => prev.map((item) => ({ ...item, checked: false })));
+    setCheckedItems(Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.id, false])));
   };
 
   return (
@@ -133,39 +134,43 @@ const DispatchForm = () => {
       <div className="glass-card p-6">
         <h3 className="font-display text-lg font-semibold mb-4">Quality Inspection Checklist</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {checklist.map((item) => (
-            <div
-              key={item.id}
-              className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
-                item.checked
-                  ? "bg-accent/10 border-accent/30"
-                  : "bg-secondary/30 border-border hover:border-accent/30"
-              }`}
-              onClick={() => handleChecklistChange(item.id, !item.checked)}
-            >
-              <Checkbox
-                id={item.id}
-                checked={item.checked}
-                onCheckedChange={(checked) =>
-                  handleChecklistChange(item.id, checked as boolean)
-                }
-                className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-              />
-              <div className="flex items-center gap-2 flex-1">
-                <span className={item.checked ? "text-accent" : "text-muted-foreground"}>
-                  {item.icon}
-                </span>
-                <Label
-                  htmlFor={item.id}
-                  className={`cursor-pointer ${
-                    item.checked ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Label>
+          {CHECKLIST_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isChecked = checkedItems[item.id];
+            return (
+              <div
+                key={item.id}
+                className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
+                  isChecked
+                    ? "bg-accent/10 border-accent/30"
+                    : "bg-secondary/30 border-border hover:border-accent/30"
+                }`}
+                onClick={() => handleChecklistChange(item.id, !isChecked)}
+              >
+                <Checkbox
+                  id={item.id}
+                  checked={isChecked}
+                  onCheckedChange={(checked) =>
+                    handleChecklistChange(item.id, checked as boolean)
+                  }
+                  className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                />
+                <div className="flex items-center gap-2 flex-1">
+                  <span className={isChecked ? "text-accent" : "text-muted-foreground"}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <Label
+                    htmlFor={item.id}
+                    className={`cursor-pointer ${
+                      isChecked ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </Label>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
