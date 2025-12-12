@@ -10,6 +10,7 @@ import Dispatch from "./pages/Dispatch";
 import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AdminRoute from "./components/layout/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -24,8 +25,22 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dispatch" element={<Dispatch />} />
-          <Route path="/staff" element={<Staff />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route
+            path="/staff"
+            element={
+              <AdminRoute>
+                <Staff />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <AdminRoute>
+                <Settings />
+              </AdminRoute>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
