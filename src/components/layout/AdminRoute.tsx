@@ -35,28 +35,16 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
       return;
     }
 
-    const user = JSON.parse(storedUser);
-    
-    // Check if user has admin privileges
-    if (user.role === "Admin" || user.role === "Dispatch Manager") {
-      // Check if already verified in this session
-      const adminVerified = sessionStorage.getItem("lgs_admin_verified");
-      if (adminVerified === "true") {
-        setIsAuthorized(true);
-      } else {
-        setShowAccessCodeDialog(true);
-      }
+    // Check if already verified in this session
+    const adminVerified = sessionStorage.getItem("lgs_admin_verified");
+    if (adminVerified === "true") {
+      setIsAuthorized(true);
     } else {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this page. Admin or Manager role required.",
-        variant: "destructive",
-      });
-      navigate("/dashboard");
+      setShowAccessCodeDialog(true);
     }
     
     setIsChecking(false);
-  }, [navigate, toast]);
+  }, [navigate]);
 
   const handleAccessCodeSubmit = () => {
     if (accessCode === ADMIN_ACCESS_CODE) {
