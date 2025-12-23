@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Dispatch from "./pages/Dispatch";
+import Fleet from "./pages/Fleet";
+import Telebirr from "./pages/Telebirr";
 import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dispatch" element={<Dispatch />} />
+          <Route path="/fleet" element={<Fleet />} />
+          <Route path="/telebirr" element={<Telebirr />} />
           <Route
             path="/staff"
             element={

@@ -4,7 +4,8 @@ import {
   Truck,
   Users,
   BarChart3,
-  Package,
+  Car,
+  Wallet,
   FileText,
   Settings,
   LogOut,
@@ -22,10 +23,10 @@ interface SidebarProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Truck, label: "Dispatch", path: "/dispatch" },
+  { icon: Car, label: "Fleet", path: "/fleet" },
+  { icon: Wallet, label: "Telebirr", path: "/telebirr" },
   { icon: Users, label: "Staff", path: "/staff", adminOnly: true },
-  { icon: Package, label: "Inventory", path: "/inventory", disabled: true },
-  { icon: BarChart3, label: "Market Data", path: "/market", disabled: true },
-  { icon: FileText, label: "Reports", path: "/reports", disabled: true },
+  { icon: BarChart3, label: "Reports", path: "/reports", disabled: true },
 ];
 
 const Sidebar = ({ onLogout }: SidebarProps) => {
