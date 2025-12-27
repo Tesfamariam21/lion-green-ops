@@ -6,77 +6,170 @@ import DispatchTable from "@/components/dispatch/DispatchTable";
 import DispatchDetailDialog from "@/components/dispatch/DispatchDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { Plus, List } from "lucide-react";
-import { DispatchRecord } from "@/types/dispatch";
-import { mockDispatchRecords } from "@/data/mockDispatchRecords";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDispatchRecords } from "@/hooks/useDispatchRecords";
 
 const Dispatch = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
-  const [records, setRecords] = useState<DispatchRecord[]>(mockDispatchRecords);
+  const { user, profile, loading, signOut } = useAuth();
+  const { records, loading: recordsLoading, approveRecord, rejectRecord, updateRecord } = useDispatchRecords();
   const [activeTab, setActiveTab] = useState("list");
-  const [selectedRecord, setSelectedRecord] = useState<DispatchRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("lgs_user");
-    if (!storedUser) {
+    if (!loading && !user) {
       navigate("/login");
-      return;
     }
-    setUser(JSON.parse(storedUser));
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("lgs_user");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
-  const handleView = (record: DispatchRecord) => {
-    setSelectedRecord(record);
+  const handleView = (record: any) => {
+    const originalRecord = records.find(r => r.id === record.id);
+    if (!originalRecord) return;
+    
+    const convertedRecord = {
+      id: originalRecord.id,
+      serialNumber: originalRecord.serial_no,
+      model: originalRecord.model,
+      variant: "Standard",
+      productionDate: originalRecord.dispatch_date,
+      productionSite: "Main Factory",
+      dispatchDate: originalRecord.dispatch_date,
+      destinationCity: originalRecord.destination_city,
+      customerName: originalRecord.customer_name,
+      transporterName: originalRecord.transporter_name,
+      transporterContact: originalRecord.transporter_contact,
+      truckNumber: originalRecord.truck_no,
+      status: originalRecord.status,
+      qcInspectorName: originalRecord.qc_inspector_name || "",
+      dispatchManagerName: originalRecord.dispatch_manager_name || "",
+      notes: "",
+      createdAt: originalRecord.created_at,
+      checklist: {
+        batteryCharged: originalRecord.battery_charged || false,
+        batteryVoltageTested: originalRecord.battery_voltage_tested || false,
+        chargerProvidedTested: originalRecord.charger_provided || false,
+        wiringHarnessInspected: originalRecord.wiring_inspected || false,
+        lightsFunctioning: originalRecord.lights_functioning || false,
+        hornWorking: originalRecord.horn_working || false,
+        displayOperational: originalRecord.dashboard_operational || false,
+        tiresInflated: originalRecord.tires_inflated || false,
+        wheelNutsTightened: originalRecord.wheel_nuts_tightened || false,
+        brakesTested: originalRecord.brakes_tested || false,
+        suspensionFunctioning: originalRecord.suspension_functioning || false,
+        steeringAlignmentChecked: originalRecord.steering_checked || false,
+        frameInspected: originalRecord.frame_inspected || false,
+        fastenersAndBoltsTightened: originalRecord.fasteners_tightened || false,
+        motorPerformanceTested: originalRecord.motor_tested || false,
+        controllerFunctioning: originalRecord.controller_functioning || false,
+        speedTestPassed: originalRecord.speed_tested || false,
+        noAbnormalNoises: originalRecord.no_abnormal_noises || false,
+        invoiceIncluded: originalRecord.invoice_included || false,
+        warrantyCardIncluded: originalRecord.warranty_card_included || false,
+        userManualIncluded: originalRecord.user_manual_included || false,
+        escortTire: originalRecord.escort_tire_included || false,
+        toolkit: originalRecord.toolkit_included || false,
+        chargerAndCables: originalRecord.charger_cables_included || false,
+        numberOfKeys: originalRecord.keys_count || 0,
+        tricycleSecured: originalRecord.tricycle_secured || false,
+        photographsTaken: originalRecord.photos_taken || false,
+      },
+    };
+    setSelectedRecord(convertedRecord);
     setIsDetailOpen(true);
   };
 
-  const handleSaveRecord = (updatedRecord: DispatchRecord) => {
-    setRecords((prev) =>
-      prev.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
-    );
-    toast({
-      title: "Record Updated",
-      description: `Dispatch ${updatedRecord.serialNumber} has been updated.`,
+  const handleSaveRecord = async (updatedRecord: any) => {
+    await updateRecord(updatedRecord.id, {
+      model: updatedRecord.model,
+      destination_city: updatedRecord.destinationCity,
+      customer_name: updatedRecord.customerName,
+      transporter_name: updatedRecord.transporterName,
+      transporter_contact: updatedRecord.transporterContact,
+      truck_no: updatedRecord.truckNumber,
     });
   };
 
-  const handleApprove = (record: DispatchRecord) => {
-    setRecords((prev) =>
-      prev.map((r) => (r.id === record.id ? { ...r, status: "approved" as const } : r))
-    );
-    toast({
-      title: "Dispatch Approved",
-      description: `${record.serialNumber} has been approved for dispatch.`,
-    });
+  const handleApprove = async (record: any) => {
+    await approveRecord(record.id, profile?.name || "Manager");
   };
 
-  const handleReject = (record: DispatchRecord) => {
-    setRecords((prev) =>
-      prev.map((r) => (r.id === record.id ? { ...r, status: "rejected" as const } : r))
-    );
-    toast({
-      title: "Dispatch Rejected",
-      description: `${record.serialNumber} has been rejected.`,
-      variant: "destructive",
-    });
+  const handleReject = async (record: any) => {
+    await rejectRecord(record.id, "Rejected by manager");
   };
 
-  if (!user) return null;
+  // Convert records to the format expected by DispatchTable
+  const tableRecords = records.map((r) => ({
+    id: r.id,
+    serialNumber: r.serial_no,
+    model: r.model,
+    variant: "Standard",
+    productionDate: r.dispatch_date,
+    productionSite: "Main Factory",
+    dispatchDate: r.dispatch_date,
+    destinationCity: r.destination_city,
+    customerName: r.customer_name,
+    transporterName: r.transporter_name,
+    transporterContact: r.transporter_contact,
+    truckNumber: r.truck_no,
+    status: r.status as "pending" | "approved" | "rejected",
+    qcInspectorName: r.qc_inspector_name || "",
+    createdAt: r.created_at,
+    checklist: {
+      batteryCharged: r.battery_charged || false,
+      batteryVoltageTested: r.battery_voltage_tested || false,
+      chargerProvidedTested: r.charger_provided || false,
+      wiringHarnessInspected: r.wiring_inspected || false,
+      lightsFunctioning: r.lights_functioning || false,
+      hornWorking: r.horn_working || false,
+      displayOperational: r.dashboard_operational || false,
+      tiresInflated: r.tires_inflated || false,
+      wheelNutsTightened: r.wheel_nuts_tightened || false,
+      brakesTested: r.brakes_tested || false,
+      suspensionFunctioning: r.suspension_functioning || false,
+      steeringAlignmentChecked: r.steering_checked || false,
+      frameInspected: r.frame_inspected || false,
+      fastenersAndBoltsTightened: r.fasteners_tightened || false,
+      motorPerformanceTested: r.motor_tested || false,
+      controllerFunctioning: r.controller_functioning || false,
+      speedTestPassed: r.speed_tested || false,
+      noAbnormalNoises: r.no_abnormal_noises || false,
+      invoiceIncluded: r.invoice_included || false,
+      warrantyCardIncluded: r.warranty_card_included || false,
+      userManualIncluded: r.user_manual_included || false,
+      escortTire: r.escort_tire_included || false,
+      toolkit: r.toolkit_included || false,
+      chargerAndCables: r.charger_cables_included || false,
+      numberOfKeys: r.keys_count || 0,
+      tricycleSecured: r.tricycle_secured || false,
+      photographsTaken: r.photos_taken || false,
+    },
+  }));
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
+
+  const userInfo = {
+    name: profile?.name || user.email?.split("@")[0] || "User",
+    role: profile?.role || "quality_inspector",
+  };
 
   return (
     <DashboardLayout
       title="Dispatch Management"
       subtitle="Register and manage tricycle dispatches"
-      user={user}
+      user={userInfo}
       onLogout={handleLogout}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -112,13 +205,19 @@ const Dispatch = () => {
               New Dispatch
             </Button>
           </div>
-          <DispatchTable
-            records={records}
-            onView={handleView}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            showActions
-          />
+          {recordsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            </div>
+          ) : (
+            <DispatchTable
+              records={tableRecords}
+              onView={handleView}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              showActions
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="new" className="animate-fade-in">

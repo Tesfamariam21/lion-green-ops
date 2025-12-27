@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { User, Bell, Shield, Palette, Save } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { User, Bell, Shield, Save } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<{ name: string; role: string; email?: string } | null>(null);
+  const { user, profile, loading, signOut } = useAuth();
   
   const [settings, setSettings] = useState({
     name: "",
@@ -25,44 +27,68 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("lgs_user");
-    if (!storedUser) {
+    if (!loading && !user) {
       navigate("/login");
       return;
     }
-    const userData = JSON.parse(storedUser);
-    setUser(userData);
-    setSettings((prev) => ({
-      ...prev,
-      name: userData.name || "",
-      email: userData.email || "",
-    }));
-  }, [navigate]);
+    
+    if (profile) {
+      setSettings((prev) => ({
+        ...prev,
+        name: profile.name || "",
+        email: profile.email || "",
+      }));
+    }
+  }, [user, loading, profile, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("lgs_user");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
-  const handleSave = () => {
-    localStorage.setItem("lgs_user", JSON.stringify({
-      ...user,
-      name: settings.name,
-      email: settings.email,
-    }));
-    toast({
-      title: "Settings Saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  const handleSave = async () => {
+    if (!profile?.id) return;
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: settings.name,
+        email: settings.email,
+      })
+      .eq("id", profile.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Settings Saved",
+        description: "Your preferences have been updated successfully.",
+      });
+    }
   };
 
-  if (!user) return null;
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
+
+  const userInfo = {
+    name: profile?.name || user.email?.split("@")[0] || "User",
+    role: profile?.role || "quality_inspector",
+  };
 
   return (
     <DashboardLayout
       title="Settings"
       subtitle="Manage your account and preferences"
-      user={user}
+      user={userInfo}
       onLogout={handleLogout}
     >
       <div className="max-w-3xl space-y-8">
@@ -102,11 +128,11 @@ const Settings = () => {
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Input value={user.role} disabled className="opacity-60" />
+              <Input value={profile?.role || "User"} disabled className="opacity-60" />
             </div>
             <div className="space-y-2">
               <Label>Account Status</Label>
-              <Input value="Active" disabled className="opacity-60" />
+              <Input value={profile?.is_active ? "Active" : "Inactive"} disabled className="opacity-60" />
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import {
   Dialog,
   DialogContent,
@@ -16,45 +18,38 @@ interface AdminRouteProps {
   children: React.ReactNode;
 }
 
-const ADMIN_ACCESS_CODE = "LGS2024"; // In production, this should be stored securely
-
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { loading: codeLoading, verifyAccessCode } = useAdminAccess();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
   const [showAccessCodeDialog, setShowAccessCodeDialog] = useState(false);
   const [accessCode, setAccessCode] = useState("");
   const [accessError, setAccessError] = useState("");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("lgs_user");
+    if (authLoading || codeLoading) return;
     
-    if (!storedUser) {
+    if (!user) {
       navigate("/login");
       return;
     }
 
-    // Check if already verified in this session
     const adminVerified = sessionStorage.getItem("lgs_admin_verified");
     if (adminVerified === "true") {
       setIsAuthorized(true);
     } else {
       setShowAccessCodeDialog(true);
     }
-    
-    setIsChecking(false);
-  }, [navigate]);
+  }, [user, authLoading, codeLoading, navigate]);
 
   const handleAccessCodeSubmit = () => {
-    if (accessCode === ADMIN_ACCESS_CODE) {
+    if (verifyAccessCode(accessCode)) {
       sessionStorage.setItem("lgs_admin_verified", "true");
       setIsAuthorized(true);
       setShowAccessCodeDialog(false);
-      toast({
-        title: "Access Granted",
-        description: "Welcome to the admin area.",
-      });
+      toast({ title: "Access Granted", description: "Welcome to the admin area." });
     } else {
       setAccessError("Invalid access code. Please try again.");
     }
@@ -65,7 +60,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     navigate("/dashboard");
   };
 
-  if (isChecking) {
+  if (authLoading || codeLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
@@ -92,22 +87,13 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
                 type="password"
                 placeholder="Enter access code"
                 value={accessCode}
-                onChange={(e) => {
-                  setAccessCode(e.target.value);
-                  setAccessError("");
-                }}
+                onChange={(e) => { setAccessCode(e.target.value); setAccessError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleAccessCodeSubmit()}
               />
-              {accessError && (
-                <p className="text-sm text-destructive">{accessError}</p>
-              )}
+              {accessError && <p className="text-sm text-destructive">{accessError}</p>}
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAccessCodeSubmit}>
-                  Verify
-                </Button>
+                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleAccessCodeSubmit}>Verify</Button>
               </div>
             </div>
           </DialogContent>
@@ -116,9 +102,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     );
   }
 
-  if (!isAuthorized) {
-    return null;
-  }
+  if (!isAuthorized) return null;
 
   return <>{children}</>;
 };
