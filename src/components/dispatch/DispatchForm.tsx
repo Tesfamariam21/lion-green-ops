@@ -394,7 +394,7 @@ const DispatchForm = ({ onSuccess }: DispatchFormProps) => {
                           onCheckedChange={(checked) =>
                             handleChecklistChange(item.id, checked === true)
                           }
-                          className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                          className="data-[state=checked]:bg-accent data-[state=checked]:border-accent data-[state=checked]:text-accent-foreground"
                         />
                         <Label
                           htmlFor={item.id}

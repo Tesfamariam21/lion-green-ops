@@ -56,10 +56,13 @@ const Login = () => {
     const { error } = await signIn(emailLower, password);
 
     if (error) {
+      const isInvalidCreds = /invalid login credentials/i.test(error.message);
+
       toast({
         title: "Login Failed",
-        description:
-          "Invalid email or password. If you don't have an account or forgot your password, use Reset password.",
+        description: isInvalidCreds
+          ? "Account not found or password incorrect. If this is your first time, ask an admin to create your account, then click Reset password to set your own password."
+          : error.message,
         variant: "destructive",
       });
     } else {

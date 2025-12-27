@@ -88,7 +88,7 @@ const DispatchDetailDialog = ({
         checked={checked}
         disabled={!isEditing}
         onCheckedChange={(checked) => handleChecklistChange(id, checked as boolean)}
-        className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+        className="data-[state=checked]:bg-accent data-[state=checked]:border-accent data-[state=checked]:text-accent-foreground"
       />
       <Label
         htmlFor={id}
