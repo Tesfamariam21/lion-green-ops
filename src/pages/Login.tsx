@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff, LogIn, Zap } from "lucide-react";
 
 const COMPANY_DOMAIN = "liongreensolution.com";
@@ -57,7 +58,8 @@ const Login = () => {
     if (error) {
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
+        description:
+          "Invalid email or password. If you don't have an account or forgot your password, use Reset password.",
         variant: "destructive",
       });
     } else {
@@ -66,6 +68,37 @@ const Login = () => {
         description: "You have successfully logged in.",
       });
       navigate("/dashboard");
+    }
+    setIsLoading(false);
+  };
+
+  const handleResetPassword = async () => {
+    const emailLower = email.trim().toLowerCase();
+    if (!emailLower.endsWith(`@${COMPANY_DOMAIN}`)) {
+      toast({
+        title: "Invalid Email",
+        description: `Please enter your company email (@${COMPANY_DOMAIN}) first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(emailLower, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      toast({
+        title: "Reset Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Check your email",
+        description: "We sent a password reset link to your inbox.",
+      });
     }
     setIsLoading(false);
   };
@@ -170,6 +203,18 @@ const Login = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="px-0 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
+                  onClick={handleResetPassword}
+                >
+                  Reset password
+                </Button>
               </div>
 
               <Button type="submit" variant="brand" size="lg" className="w-full" disabled={isLoading}>
