@@ -15,7 +15,7 @@ const Dispatch = () => {
   const { user, profile, loading, signOut } = useAuth();
   const { records, loading: recordsLoading, approveRecord, rejectRecord, updateRecord } = useDispatchRecords();
   const [activeTab, setActiveTab] = useState("list");
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [selectedRecord, setSelectedRecord] = useState<import("@/types/dispatch").DispatchRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
@@ -87,12 +87,50 @@ const Dispatch = () => {
 
   const handleSaveRecord = async (updatedRecord: any) => {
     await updateRecord(updatedRecord.id, {
+      serial_no: updatedRecord.serialNumber,
       model: updatedRecord.model,
+      dispatch_date: updatedRecord.dispatchDate,
       destination_city: updatedRecord.destinationCity,
       customer_name: updatedRecord.customerName,
       transporter_name: updatedRecord.transporterName,
       transporter_contact: updatedRecord.transporterContact,
       truck_no: updatedRecord.truckNumber,
+      qc_inspector_name: updatedRecord.qcInspectorName || null,
+      dispatch_manager_name: updatedRecord.dispatchManagerName || null,
+
+      // Checklist mapping
+      battery_charged: updatedRecord.checklist?.batteryCharged ?? false,
+      battery_voltage_tested: updatedRecord.checklist?.batteryVoltageTested ?? false,
+      charger_provided: updatedRecord.checklist?.chargerProvidedTested ?? false,
+      wiring_inspected: updatedRecord.checklist?.wiringHarnessInspected ?? false,
+      lights_functioning: updatedRecord.checklist?.lightsFunctioning ?? false,
+      horn_working: updatedRecord.checklist?.hornWorking ?? false,
+      dashboard_operational: updatedRecord.checklist?.displayOperational ?? false,
+
+      tires_inflated: updatedRecord.checklist?.tiresInflated ?? false,
+      wheel_nuts_tightened: updatedRecord.checklist?.wheelNutsTightened ?? false,
+      brakes_tested: updatedRecord.checklist?.brakesTested ?? false,
+      suspension_functioning: updatedRecord.checklist?.suspensionFunctioning ?? false,
+      steering_checked: updatedRecord.checklist?.steeringAlignmentChecked ?? false,
+      frame_inspected: updatedRecord.checklist?.frameInspected ?? false,
+      fasteners_tightened: updatedRecord.checklist?.fastenersAndBoltsTightened ?? false,
+
+      motor_tested: updatedRecord.checklist?.motorPerformanceTested ?? false,
+      controller_functioning: updatedRecord.checklist?.controllerFunctioning ?? false,
+      speed_tested: updatedRecord.checklist?.speedTestPassed ?? false,
+      no_abnormal_noises: updatedRecord.checklist?.noAbnormalNoises ?? false,
+
+      invoice_included: updatedRecord.checklist?.invoiceIncluded ?? false,
+      warranty_card_included: updatedRecord.checklist?.warrantyCardIncluded ?? false,
+      user_manual_included: updatedRecord.checklist?.userManualIncluded ?? false,
+
+      escort_tire_included: updatedRecord.checklist?.escortTire ?? false,
+      toolkit_included: updatedRecord.checklist?.toolkit ?? false,
+      charger_cables_included: updatedRecord.checklist?.chargerAndCables ?? false,
+      keys_count: updatedRecord.checklist?.numberOfKeys ?? 0,
+
+      tricycle_secured: updatedRecord.checklist?.tricycleSecured ?? false,
+      photos_taken: updatedRecord.checklist?.photographsTaken ?? false,
     });
   };
 
