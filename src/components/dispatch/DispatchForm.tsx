@@ -390,11 +390,15 @@ const DispatchForm = ({ onSuccess }: DispatchFormProps) => {
                         <Checkbox
                           id={item.id}
                           checked={isChecked}
-                          onCheckedChange={(checked) => handleChecklistChange(item.id, checked as boolean)}
+                          onClick={(e) => e.stopPropagation()}
+                          onCheckedChange={(checked) =>
+                            handleChecklistChange(item.id, checked === true)
+                          }
                           className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                         />
                         <Label
                           htmlFor={item.id}
+                          onClick={(e) => e.stopPropagation()}
                           className={`cursor-pointer text-sm ${
                             isChecked ? "text-foreground" : "text-muted-foreground"
                           }`}
