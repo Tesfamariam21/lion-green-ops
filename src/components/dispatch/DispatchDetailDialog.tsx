@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -49,11 +49,11 @@ const DispatchDetailDialog = ({
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [editedRecord, setEditedRecord] = useState<DispatchRecord | null>(record);
 
-  // Update local state when record changes
-  if (record && record.id !== editedRecord?.id) {
+  // Keep local state in sync with incoming record (avoid setState during render)
+  useEffect(() => {
     setEditedRecord(record);
     setIsEditing(initialEditing);
-  }
+  }, [record?.id, initialEditing]);
 
   if (!record || !editedRecord) return null;
 
