@@ -1,0 +1,2 @@
+# Disable JWT verification for bootstrap access
+verify_jwt = false
